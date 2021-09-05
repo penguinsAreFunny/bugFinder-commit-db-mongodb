@@ -3,7 +3,7 @@
  */
 import {inject, injectable} from "inversify";
 import {Commit} from "bugfinder-localityrecorder-commit";
-import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "./TYPES";
+import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
 import {LocalityMap} from "bugfinder-framework";
 import {MongoClient, MongoError} from "mongodb";
