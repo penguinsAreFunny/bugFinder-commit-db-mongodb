@@ -1,7 +1,6 @@
 import { Commit } from "bugfinder-localityrecorder-commit";
 import { MongoDBConfig } from "./mongoDBConfig";
-import { LocalityMap } from "bugfinder-framework";
-import { DB } from "bugfinder-framework/dist/00-shared/db/DB";
+import { DB, LocalityMap } from "bugfinder-framework";
 export declare class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, Annotation, Quantification> {
     dbConfig: MongoDBConfig;
     /**
