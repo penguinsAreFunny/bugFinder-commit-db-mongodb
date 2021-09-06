@@ -5,9 +5,8 @@ import {inject, injectable} from "inversify";
 import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
-import {LocalityMap} from "bugfinder-framework";
 import {MongoClient, MongoError} from "mongodb";
-import {DB} from "bugfinder-framework/dist/00-shared/db/DB";
+import {DB} from "bugfinder-framework";
 
 @injectable()
 export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, Annotation, Quantification> {
