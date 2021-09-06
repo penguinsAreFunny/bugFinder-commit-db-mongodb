@@ -1,3 +1,3 @@
 export const BUGFINDER_DB_COMMIT_MONGODB_TYPES = {
-    mongoDBConfig: Symbol.for("MongoDBConfig"),
+    mongoDBConfig: Symbol("MongoDBConfig"),
 }
