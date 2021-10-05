@@ -6,7 +6,7 @@ import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
 import {MongoClient, MongoError} from "mongodb";
-import {DB, LocalityMap} from "bugfinder-framework";
+import {DB, LocalityMap, Dataset} from "bugfinder-framework";
 
 @injectable()
 export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, Annotation, Quantification> {
@@ -84,6 +84,15 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         console.log(`Writing ${quantifications.size()} quantifications to collection ${toID} using database ` +
             `${this.dbConfig.dbName} from ${this.dbConfig.url}...`)
         await this.writeMany(quantifications.toArray(), toID);
+    }
+
+    async readDataset(fromID: string): Promise<Dataset> {
+        const dataset = (await this.read(fromID))[0]
+        return dataset[0]
+    }
+
+    async writeDataset(toID: string, dataset: Dataset): Promise<void> {
+        await this.write(dataset, toID)
     }
 
     private async read(fromID: string, skip?: number, n?: number): Promise<any[]> {
@@ -166,12 +175,13 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         const properties = Object.getOwnPropertyNames(Commit.prototype)
         const methods = properties.filter(property => {
             const descriptor = Object.getOwnPropertyDescriptor(Commit.prototype, property);
-            return !descriptor?
+            return !descriptor ?
                 false
                 : typeof descriptor.value == "function" && property != "constructor" && !property.startsWith("__");
         })
 
         Commit.prototype.setMethods(commit);
     }
+
 
 }
