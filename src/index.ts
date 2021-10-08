@@ -1,3 +1,7 @@
+import {FileAndConsoleLogger, LogConfig, SHARED_TYPES} from "bugfinder-framework";
+import {sharedContainer} from "bugfinder-framework-defaultContainer";
+import {Logger} from "ts-logger";
+
 export * from "./mongoDB"
 export * from "./TYPES"
 
