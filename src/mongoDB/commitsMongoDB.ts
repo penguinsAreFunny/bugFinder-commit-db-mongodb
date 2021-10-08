@@ -5,8 +5,8 @@ import {inject, injectable} from "inversify";
 import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
-import {MongoClient, MongoError} from "mongodb";
-import {DB, LocalityMap, Dataset, DatasetAP, DatasetAFE, WriteMode} from "bugfinder-framework";
+import {MongoClient} from "mongodb";
+import {Dataset, DatasetAFE, DatasetAP, DB, LocalityMap, WriteMode} from "bugfinder-framework";
 import {Logger} from "ts-logger"
 
 @injectable()
@@ -122,7 +122,7 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
      * Writes DatasetAFE to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
      * @param toID
      * @param dataset
-     * @param mdoe
+     * @param mode
      */
     async writeDatasetAFE(toID: string, dataset: DatasetAFE, mode?: WriteMode): Promise<void> {
         await this.write(dataset, toID, mode)
@@ -144,10 +144,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return dbContent;
     }
 
-    async write(obj: any, toID: string, mode?) {
-        if (mode == null) mode = "w"
+    async write(obj: any, toID: string, mode?: WriteMode) {
+        if (mode == null) mode = WriteMode.write
 
-        if (mode != "a") {
+        if (mode != WriteMode.append) {
             // do not write to collection if there are already elements!
             const emptyCol = await this.empty(toID, true)
             if (emptyCol) return
@@ -165,10 +165,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         await client.close();
     }
 
-    async writeMany(objs: any[], toID: string, mode?) {
-        if (mode == null) mode = "w"
+    async writeMany(objs: any[], toID: string, mode?: WriteMode) {
+        if (mode == null) mode = WriteMode.write
 
-        if (mode != "a") {
+        if (mode != WriteMode.append) {
             // do not write to collection if there are already elements!
             const emptyCol = await this.empty(toID, true)
             if (emptyCol)
