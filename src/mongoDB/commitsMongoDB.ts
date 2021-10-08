@@ -6,7 +6,7 @@ import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
 import {MongoClient, MongoError} from "mongodb";
-import {DB, LocalityMap, Dataset, DatasetAP, DatasetAFE} from "bugfinder-framework";
+import {DB, LocalityMap, Dataset, DatasetAP, DatasetAFE, WriteMode} from "bugfinder-framework";
 import {Logger} from "ts-logger"
 
 @injectable()
@@ -36,9 +36,9 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return localities;
     }
 
-    async writeLocalities(localities: Commit[], toID: string) {
+    async writeLocalities(localities: Commit[], toID: string, mode?: WriteMode) {
         this.logger?.info(`Writing ${localities.length} localities to collection ${toID} into database...`)
-        await this.writeMany(localities, toID);
+        await this.writeMany(localities, toID, mode);
     }
 
     async readAnnotations(fromID: string, skip?: number, n?: number): Promise<LocalityMap<Commit, Annotation>> {
@@ -59,10 +59,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return locMap;
     }
 
-    async writeAnnotations(annotations: LocalityMap<Commit, Annotation>, toID: string): Promise<void> {
+    async writeAnnotations(annotations: LocalityMap<Commit, Annotation>, toID: string, mode?: WriteMode): Promise<void> {
         this.logger?.info(`Writing ${annotations.size()} annotations to collection ${toID} using database ` +
             `${this.dbConfig.dbName} from ${this.dbConfig.url}...`)
-        await this.writeMany(annotations.toArray(), toID);
+        await this.writeMany(annotations.toArray(), toID, mode);
     }
 
     async readQuantifications(fromID: string, skip?: number, n?: number): Promise<LocalityMap<Commit, Quantification>> {
@@ -83,10 +83,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return locMap;
     }
 
-    async writeQuantifications(quantifications: LocalityMap<Commit, Quantification>, toID: string): Promise<void> {
+    async writeQuantifications(quantifications: LocalityMap<Commit, Quantification>, toID: string, mode?: WriteMode): Promise<void> {
         this.logger?.info(`Writing ${quantifications.size()} quantifications to collection ${toID} using database ` +
             `${this.dbConfig.dbName} from ${this.dbConfig.url}...`)
-        await this.writeMany(quantifications.toArray(), toID);
+        await this.writeMany(quantifications.toArray(), toID, mode);
     }
 
     async readDataset(fromID: string): Promise<Dataset> {
@@ -94,8 +94,8 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return dataset[0]
     }
 
-    async writeDataset(toID: string, dataset: Dataset): Promise<void> {
-        await this.write(dataset, toID)
+    async writeDataset(toID: string, dataset: Dataset, mode?: WriteMode): Promise<void> {
+        await this.write(dataset, toID, mode)
     }
 
     async readDatasetAP(fromID: string): Promise<DatasetAP> {
@@ -107,9 +107,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
      * Writes DatasetAP to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
      * @param toID
      * @param dataset
+     * @param mode
      */
-    async writeDatasetAP(toID: string, dataset: DatasetAP): Promise<void> {
-        await this.write(dataset, toID)
+    async writeDatasetAP(toID: string, dataset: DatasetAP, mode?: WriteMode): Promise<void> {
+        await this.write(dataset, toID, mode)
     }
 
     async readDatasetAFE(fromID: string): Promise<DatasetAFE> {
@@ -121,9 +122,10 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
      * Writes DatasetAFE to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
      * @param toID
      * @param dataset
+     * @param mdoe
      */
-    async writeDatasetAFE(toID: string, dataset: DatasetAFE): Promise<void> {
-        await this.write(dataset, toID)
+    async writeDatasetAFE(toID: string, dataset: DatasetAFE, mode?: WriteMode): Promise<void> {
+        await this.write(dataset, toID, mode)
     }
 
     private async read(fromID: string, skip?: number, n?: number): Promise<any[]> {
@@ -142,13 +144,13 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return dbContent;
     }
 
-    async write(obj: any, toID: string) {
-        const elementsInCollection = await this.read(toID);
+    async write(obj: any, toID: string, mode?) {
+        if (mode == null) mode = "w"
 
-        if (elementsInCollection.length > 0) {
-            throw(new MongoError(`Found ${elementsInCollection.length} elements in database collection ${toID}.
-                Database collection commits should be empty! Aborting Writing to DB. Please delete all elements 
-                in collection ${toID} to prevent redundancy.`))
+        if (mode != "a") {
+            // do not write to collection if there are already elements!
+            const emptyCol = await this.empty(toID, true)
+            if (emptyCol) return
         }
 
         // @formatter:off
@@ -163,15 +165,15 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         await client.close();
     }
 
-    async writeMany(objs: any[], toID: string) {
-        const elementsInCollection = await this.read(toID);
+    async writeMany(objs: any[], toID: string, mode?) {
+        if (mode == null) mode = "w"
 
-        if (elementsInCollection.length > 0) {
-            throw(new MongoError(`Found ${elementsInCollection.length} elements in database collection ${toID}.
-                Database collection commits should be empty! Aborting Writing to DB. Please delete all elements 
-                in collection ${toID} to prevent redundancy.`))
+        if (mode != "a") {
+            // do not write to collection if there are already elements!
+            const emptyCol = await this.empty(toID, true)
+            if (emptyCol)
+                return
         }
-
         // @formatter:off
         const client: MongoClient   = await MongoClient.connect(this.dbConfig.url, {useUnifiedTopology: true});
         const db                    = client.db(this.dbConfig.dbName);
@@ -192,8 +194,28 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
     }
 
     /**
+     * Returns true if collection is empty. Logs error if error is set to true
+     * @param toID
+     * @param error
+     * @private
+     */
+    private async empty(toID: string, error: boolean): Promise<boolean> {
+        const elementsInCollection = await this.read(toID);
+        const numberElInCol = elementsInCollection.length
+        if (numberElInCol > 0) {
+            if (error) {
+                this.logger?.error(`Found ${numberElInCol} elements in database collection ${toID}.
+                Database collection commits should be empty! Aborting Writing to DB. Please delete all elements 
+                in collection ${toID} to prevent redundancy.`)
+            }
+            return false
+        }
+        return true
+    }
+
+    /**
      * Set Methods to CommitPath-Objects as only DTOs are saved in database
-     * @param commitPath
+     * @param commit
      * @private
      */
     private setMethods(commit: Commit) {
