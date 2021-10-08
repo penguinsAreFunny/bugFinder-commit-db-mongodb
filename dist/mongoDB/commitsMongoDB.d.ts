@@ -1,6 +1,6 @@
 import { Commit } from "bugfinder-localityrecorder-commit";
 import { MongoDBConfig } from "./mongoDBConfig";
-import { DB, LocalityMap, Dataset, DatasetAP, DatasetAFE, WriteMode } from "bugfinder-framework";
+import { Dataset, DatasetAFE, DatasetAP, DB, LocalityMap, WriteMode } from "bugfinder-framework";
 import { Logger } from "ts-logger";
 export declare class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, Annotation, Quantification> {
     private logger;
@@ -35,12 +35,12 @@ export declare class CommitsMongoDB<Annotation, Quantification> implements DB<Co
      * Writes DatasetAFE to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
      * @param toID
      * @param dataset
-     * @param mdoe
+     * @param mode
      */
     writeDatasetAFE(toID: string, dataset: DatasetAFE, mode?: WriteMode): Promise<void>;
     private read;
-    write(obj: any, toID: string, mode?: any): Promise<void>;
-    writeMany(objs: any[], toID: string, mode?: any): Promise<void>;
+    write(obj: any, toID: string, mode?: WriteMode): Promise<void>;
+    writeMany(objs: any[], toID: string, mode?: WriteMode): Promise<void>;
     /**
      * Returns true if collection is empty. Logs error if error is set to true
      * @param toID
