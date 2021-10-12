@@ -150,7 +150,11 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         if (mode != WriteMode.append) {
             // do not write to collection if there are already elements!
             const emptyCol = await this.empty(toID, true)
-            if (emptyCol) return
+            if (!emptyCol) {
+                this.logger?.warn(`Collection ${toID} is not empty. Not writing to Database.` +
+                    `Consider using DB.write with WriteMode.append to write to not empty collection`)
+                return
+            }
         }
 
         // @formatter:off
@@ -171,8 +175,11 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         if (mode != WriteMode.append) {
             // do not write to collection if there are already elements!
             const emptyCol = await this.empty(toID, true)
-            if (emptyCol)
+            if (!emptyCol) {
+                this.logger?.warn(`Collection ${toID} is not empty. Not writing to Database.` +
+                    `Consider using DB.write with WriteMode.append to write to not empty collection`)
                 return
+            }
         }
         // @formatter:off
         const client: MongoClient   = await MongoClient.connect(this.dbConfig.url, {useUnifiedTopology: true});
