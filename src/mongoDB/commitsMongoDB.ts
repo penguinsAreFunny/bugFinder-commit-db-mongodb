@@ -6,7 +6,7 @@ import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
 import {MongoClient} from "mongodb";
-import {Dataset, DatasetAFE, DatasetAP, DB, LocalityMap, WriteMode} from "bugfinder-framework";
+import {Dataset, DatasetAFE, DatasetAP, DB, LocalityMap, SHARED_TYPES, WriteMode} from "bugfinder-framework";
 import {Logger} from "ts-logger"
 
 @injectable()
@@ -17,7 +17,7 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
      * @param logger
      * @param dbConfig
      */
-    constructor(@inject(BUGFINDER_DB_COMMIT_MONGODB_TYPES.logger) private logger: Logger,
+    constructor(@inject(SHARED_TYPES.logger) private logger: Logger,
                 @inject(BUGFINDER_DB_COMMIT_MONGODB_TYPES.mongoDBConfig) public dbConfig: MongoDBConfig) {
     }
 
