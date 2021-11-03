@@ -6,7 +6,7 @@ import {Commit} from "bugfinder-localityrecorder-commit";
 import {BUGFINDER_DB_COMMIT_MONGODB_TYPES} from "../TYPES";
 import {MongoDBConfig} from "./mongoDBConfig";
 import {MongoClient} from "mongodb";
-import {Dataset, DatasetAFE, DatasetAP, DB, LocalityMap, SHARED_TYPES, WriteMode} from "bugfinder-framework";
+import {Dataset, DB, LocalityMap, SHARED_TYPES, WriteMode} from "bugfinder-framework";
 import {Logger} from "ts-logger"
 
 @injectable()
@@ -94,43 +94,19 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         return dataset[0]
     }
 
-    async writeDataset(toID: string, dataset: Dataset, mode?: WriteMode): Promise<void> {
-        await this.write(dataset, toID, mode)
-    }
-
-    async readDatasetAP(fromID: string): Promise<DatasetAP> {
-        const dataset = (await this.read(fromID))[0]
-        return dataset[0]
-    }
-
-    /**
-     * Writes DatasetAP to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
-     * @param toID
-     * @param dataset
-     * @param mode
-     */
-    async writeDatasetAP(toID: string, dataset: DatasetAP, mode?: WriteMode): Promise<void> {
-        await this.write(dataset, toID, mode)
-    }
-
-    async readDatasetAFE(fromID: string): Promise<DatasetAFE> {
-        const dataset = (await this.read(fromID))[0]
-        return dataset[0]
-    }
-
     /**
      * Writes DatasetAFE to DB at location (collection/table/file/...) toID. With mode = "a" data will be appended.
      * @param toID
      * @param dataset
      * @param mode
      */
-    async writeDatasetAFE(toID: string, dataset: DatasetAFE, mode?: WriteMode): Promise<void> {
+    async writeDataset(toID: string, dataset: Dataset, mode?: WriteMode): Promise<void> {
         await this.write(dataset, toID, mode)
     }
 
     private async read(fromID: string, skip?: number, n?: number): Promise<any[]> {
         // @formatter:off
-        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url, {useUnifiedTopology: true});
+        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url);
         const db                    = client.db(this.dbConfig.dbName);
         const collectionName        = fromID;
         const collection            = db.collection(collectionName);
@@ -158,7 +134,7 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
         }
 
         // @formatter:off
-        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url, {useUnifiedTopology: true});
+        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url);
         const db                    = client.db(this.dbConfig.dbName);
         const collectionName        = toID;
         const collection            = db.collection(collectionName);
@@ -182,7 +158,7 @@ export class CommitsMongoDB<Annotation, Quantification> implements DB<Commit, An
             }
         }
         // @formatter:off
-        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url, {useUnifiedTopology: true});
+        const client: MongoClient   = await MongoClient.connect(this.dbConfig.url);
         const db                    = client.db(this.dbConfig.dbName);
         const collectionName        = toID;
         const collection            = db.collection(collectionName);
