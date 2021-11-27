@@ -38,7 +38,7 @@
     "@types/node": "^15.12.2",
     "bugfinder-framework": "^10.1.0",
     "bugfinder-framework-defaultcontainer": "^1.2.0",
-    "bugfinder-localityrecorder-commit": "^1.0.1",
+    "bugfinder-localityrecorder-commit": "^2.8.0",
     "inversify": "^5.1.1",
     "mongodb": "^3.6.2",
     "reflect-metadata": "^0.1.13",
